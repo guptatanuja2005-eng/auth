@@ -9,7 +9,7 @@ const authMiddleware = require("../middleware/authMiddleware");
 const router = express.Router();
 
 
-// REGISTER
+
 router.post("/register", async (req, res) => {
 
   try {
@@ -48,7 +48,7 @@ router.post("/register", async (req, res) => {
 });
 
 
-// LOGIN
+
 router.post("/login", async (req, res) => {
 
   try {
@@ -100,7 +100,7 @@ router.post("/login", async (req, res) => {
 });
 
 
-// PROFILE
+
 router.get(
   "/profile",
   authMiddleware,
@@ -116,7 +116,7 @@ router.get(
 );
 
 
-// LOGOUT
+
 router.post("/logout", (req, res) => {
 
   res.clearCookie("token");
