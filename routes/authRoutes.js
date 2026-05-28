@@ -2,11 +2,20 @@
 const express = require("express");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
+const passport = require("passport");
 
 const User = require("../models/User");
 const authMiddleware = require("../middleware/authMiddleware");
 
 const router = express.Router();
+
+const createToken = (userId) => {
+  return jwt.sign(
+    { userId },
+    process.env.JWT_SECRET,
+    { expiresIn: "1d" }
+  );
+};
 
 
 
@@ -48,7 +57,6 @@ router.post("/register", async (req, res) => {
 });
 
 
-
 router.post("/login", async (req, res) => {
 
   try {
@@ -74,11 +82,7 @@ router.post("/login", async (req, res) => {
       });
     }
 
-    const token = jwt.sign(
-      { userId: user._id },
-      process.env.JWT_SECRET,
-      { expiresIn: "1d" }
-    );
+    const token = createToken(user._id);
 
     res.cookie("token", token, {
       httpOnly: true,
@@ -100,7 +104,43 @@ router.post("/login", async (req, res) => {
 });
 
 
+// GOOGLE OAUTH
+router.get(
+  "/google",
+  passport.authenticate("google", {
+    scope: ["profile", "email"]
+  })
+);
 
+router.get(
+  "/google/callback",
+  passport.authenticate("google", {
+    failureRedirect: "/api/auth/google/failure"
+  }),
+  (req, res) => {
+    const token = createToken(req.user._id);
+
+    res.cookie("token", token, {
+      httpOnly: true,
+      secure: false
+    });
+
+    res.json({
+      message: "Google Login Successful",
+      user: req.user,
+      token
+    });
+  }
+);
+
+router.get("/google/failure", (req, res) => {
+  res.status(401).json({
+    message: "Google Login Failed"
+  });
+});
+
+
+// PROFILE
 router.get(
   "/profile",
   authMiddleware,
